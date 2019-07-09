@@ -1,0 +1,229 @@
+1- escolher facção
+    galactic civil war: império x rebelde
+    clone wars: republica x separatistas
+
+
+2- tamanho do exército
+    - standard: 800
+    - grand: 1600
+
+3- adicionar cartas
+3a) unidades - unit (pontuação)
+    - trooper (vários ícones e tipos, vou chutar o nome)
+        - comandante - trooper (std 1-2 / grand 1-4)
+        - subcomandante - trooper (0-2 / 0-2)
+        - tropa - trooper (3-6 / 6-10)
+        - tropa 2 - emplacement trooper (0-3 / 0-5)
+        - veículo chão - ground vehicle (0-3 / 0-5)
+        - veículo repulsor - repulsor vehicle (0-2 / 0-2)
+
+    Comandantes:
+    * unidades com "entourage" permite acrescentar uma unidade de special forces extra
+    * krennik permite incluir um death trooper a mais
+    * palpa permite incluir um royal guard
+
+3b) cartas de comando (0-7 - 2 uma bolinha, 2 duas bolinhas, 2 tres bolinhas)
+- X unidades
+- Y bolinhas
+- descrição
+3c) plano de  batalha (1-4)
+- categoria
+    - deployments (imagem)
+    - objectives (texto setup/victory)
+    - conditions (texto setup)
+4- adicionar upgrades (pontuação/tipo)
+4a) trooper
+    - force
+    - training
+    - gear
+    - heavy weapon
+    - personnel
+    - grenades 
+    - comms
+    - config
+4b) emplacement trooper
+    - comms
+    - generator
+4c) [ground/repulsor] vehicles
+    - comms
+    - pilot
+    - hardpoint
+
+aparentemente todos os upgrades cabem em qualquer tipo de unidade. não desconsiderar a possibilidade de ter restrições descritas nas cartas tipo "dark side only"
+
+
+
+--
+
+view-source:https://tabletopadmiral.com/legion/
+
+var allUnits = [];
+var allUpgrades = [];
+var allCommands = [];
+var allConditions = [];
+var allDeployments = [];
+var allObjectives = [];
+
+
+--
+
+proposta de json
+
+
+units.js
+
+[ 
+    {
+    "name": string
+    "cost": integer 
+    "faction": light side / dark side
+    "upgrade_type": [ comms / hardpoint / force / gear / heavy weapon / personnel / gear / grenades / command / pilot / training
+    "rank": support / commander / corps / heavy / special forces / operative
+    "unit_type": ground vehicle / trooper / repulsor vehicle / emplacement trooper 
+    "unique": true/false
+    "health": integer
+    "card_text": string
+    "keyword": [ "", "", "" ]
+    "attack_mod": [ "", "", "" ]
+    }
+]
+
+mapFaction=function(x){
+    if(x=='Light Side') return 'light_side';
+    if(x=='Dark Side') return 'dark_side';
+    if(x=='Galactic Republic') return 'galactic_republic';
+    if(x=='Separatist Alliance') return 'separatist_alliance';
+    if(x=='Neutral') return 'neutral';
+    throw ("Unmapped faction "+x)
+}
+
+mapUpgradeType=function(x){
+if(x=='Comms') return 'comms';
+if(x=="Hardpoint") return 'hardpoint';
+if(x=="Force") return 'force';
+if(x=="Gear") return 'gear';
+if(x=="Heavy Weapon") return 'heavy_weapon';
+if(x=="Personnel") return 'personnel';
+if(x=="Grenades") return 'grenads';
+if(x=="Command") return 'command';
+if(x=="Pilot") return 'pilot';
+if(x=="Training") return 'training';
+if(x=="Generator") return 'generator';
+if(x=="Config") return 'config';
+if(x=="Crew") return 'crew';
+throw ("Unmapped upgrade type "+x)
+}
+
+mapRank=function(x){
+if(x=='Support') return 'support';
+if(x=='Commander') return 'commander';
+if(x=='Corps') return 'corps';
+if(x=='Heavy') return 'heavy';
+if(x=='Special Forces') return 'special_forces';
+if(x=='Operative') return 'operative';
+throw ("Unmapped rank "+x)
+}
+
+mapUnitType=function(x){
+if(x=='Ground Vehicle') return 'ground_vehicle';
+if(x=='Trooper') return 'trooper';
+if(x=='Clone Trooper') return 'clone_trooper';
+if(x=='Droid Trooper') return 'droid_trooper';
+if(x=='Repulsor Vehicle') return 'repulsor_vehicle';
+if(x=='Emplacement Trooper') return 'emplacement_trooper';
+if(x=='None') return 'none';
+throw ("Unmapped unit "+x)
+}
+
+myUnits = []
+$(allUnits).each(function(x,o){
+    myUnits.push(
+    {
+        "name": o.Name,
+        "cost": o.Cost, 
+        "faction": mapFaction(o.Faction), // light_side / dark_side
+        "upgrade_type": o.Upgrades.map(mapUpgradeType), // [ comms / hardpoint / force / gear / heavy weapon / personnel / gear / grenades / command / pilot / training
+        "rank": mapRank(o.Rank), // support / commander / corps / heavy / special forces / operative
+        "unit_type": mapUnitType( o.UnitType ), // ground vehicle / trooper / repulsor vehicle / emplacement trooper 
+        "unique": o.Unique=="True"?true:false, // true/false
+        "health": o.Health, //integer
+        "card_text": o.CardText, // string
+        "keyword": [ o.Keyword1,o.Keyword2,o.Keyword3,o.Keyword4,o.Keyword5 ],
+        "attack_mod": [ o.Attack1Mod1,o.Attack1Mod2,o.Attack2Mod1,o.Attack2Mod2 ]
+    }
+    );
+})
+console.log(JSON.stringify(myUnits))
+
+upgrades.js
+
+[
+    {
+    "name": string
+    "cost": integer
+    "faction": light side / dark side / neutral
+    "upgrade_type": []
+    "unique": true/false
+    "unit_type": [ ]
+    "card_text": string
+    "keyword": [ "", "", "" ]
+    }
+]
+
+
+myUpgrades = []
+$(allUpgrades).each(function(x,o){
+    myUpgrades.push(
+    {
+        "name": o.Name,
+        "cost": o.Cost, 
+        "faction": mapFaction(o.Faction), // light_side / dark_side
+        "upgrade_type": mapUpgradeType(o.Type), // [ comms / hardpoint / force / gear / heavy weapon / personnel / gear / grenades / command / pilot / training
+        "unit_type": mapUnitType( o.UnitType ), // ground vehicle / trooper / repulsor vehicle / emplacement trooper 
+        "unique": o.Unique=="True"?true:false, // true/false
+        "keyword": [ o.Keyword1,o.Keyword2,o.Keyword3,o.Keyword4,o.Keyword5 ],
+    }
+    );
+})
+console.log(JSON.stringify(myUpgrades))
+
+
+
+
+commands.js
+
+[
+    {
+    "name": string
+    "faction": 
+    "pips" : integer -- bolinhas
+    "units" : integer
+    "card_text": string
+    }
+]
+
+
+conditions.js
+
+[
+    {
+    "name": string
+    "card_text": string
+    }
+]
+
+deployments.js
+[
+    {
+    "name": string
+    "card_text": string
+    }
+]
+
+objectives.js
+[
+    {
+    "name": string
+    "card_text": string  
+    }
+]

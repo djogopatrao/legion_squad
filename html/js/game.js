@@ -1,0 +1,216 @@
+$(document).ready(function(){
+    var allFactions, allUnits, allUpgrades;
+    var selectedFaction;
+    var army=[];
+    var totalPoints = 0;
+    // carrega dados de facção em json
+    $.ajax({
+        url:'data/factions.json',
+        dataType:'json',
+        complete: function(x,r){
+            allFactions = x.responseJSON;
+            // carrega combo de facções
+            $('#select-faction')
+                .find('option')
+                .remove()
+                .end()
+                .append('<option value="" default=1>Escolha sua facção...</option>')
+                .val('');
+            $(allFactions).each(function(k,v){
+                $('#select-faction').append($('<option />').val(v.name).text(v.description));
+            });
+
+
+        }
+    });
+
+    // carrega dados de unidades em json
+    $.ajax({
+        url:'data/units.json',
+        dataType:'json',
+        complete: function(x,r){
+            allUnits = x.responseJSON;
+        }
+    });
+
+    // carrega dados de upgrades em json
+    $.ajax({
+        url:'data/upgrades.json',
+        dataType:'json',
+        complete: function(x,r){
+            allUpgrades = x.responseJSON;
+        }
+    });
+
+
+    // ao escolher uma facção, trava o botão e popula o combo de unidades
+    $('#select-faction').on('change',function(e){
+        $('#select-faction').prop('disabled',true);
+        selectedFaction = $('#select-faction').val();
+
+        // carrega combo de facções
+        $('#select-unit')
+            .find('option')
+            .remove()
+            .end()
+            .append('<option value="" default=1>Escolha a unidade...</option>')
+            .val('');
+        $(allUnits).each(function(k,v){
+            if ( v.faction == selectedFaction || v.faction == 'Neutral' ) {
+                var display_name = getUnitTitle(v);
+                $('#select-unit').append($('<option />').val(v.name).text(display_name));
+            }
+        });
+
+    })
+
+    // ao escolher uma unidade, adiciona ela à cambada
+    $('#add-unit-button').on('click',function(e){
+        var unit = getUnitDataByName($('#select-unit').val());
+        if ( !unit ) { throw "Não achei essa unidade! Eita."; }
+        var newUnit = cloneObject( unit );
+        // TODO testar se é unidade unica, e se já existe
+        // este array contem os upgrades equipados.
+        newUnit.equipped_upgrades = []
+        army.push(newUnit);
+        renderArmy();
+    });
+
+    // pendura um evento onclick para todos os links de upgrade
+    hookEventsForUpgradesLinks = function() {    
+        // ao escolher um upgrade, permite escolher uma carta desse tipo
+        $('.upgrade').on('click',function(e){
+            var army_index = $(e.target).attr('army-index');
+            var upgrade_index = $(e.target).attr('upgrade-index');
+            selectUpgrade( army_index, upgrade_index, army[army_index].upgrade_type[upgrade_index], army[army_index].unit_type );
+        });
+    }
+
+    // pendura um evento onclick para todos os links de upgrade
+    hookEventsForUpgradeCards = function(army_index, upgrade_index) {    
+        // ao escolher um upgrade, permite escolher uma carta desse tipo
+        $('.upgrade-card').on('click',function(e){
+            var upgrade_card_index = $(e.currentTarget).attr('upgrade-card-index');
+            equipUpgrade( army_index, upgrade_index, upgrade_card_index );
+            hideUpgrades();
+            renderArmy();
+            showArmy();
+        });
+    }
+
+    // exibe a tela de seleção de upgrade 
+    selectUpgrade = function( army_index, upgrade_index, upgrade_type,  unit_type ) {
+        console.log("clicou no upgrade "+upgrade_type+" da unidade "+army[army_index].name + " tipo " + unit_type);
+        hideArmy();
+        showUpgrades(upgrade_type,  unit_type);
+        hookEventsForUpgradeCards(army_index, upgrade_index);
+    }
+
+    // insere o upgrade especificado na nave
+    equipUpgrade = function( army_index, upgrade_index, upgrade_card_index ){
+        console.log( "equipando carta '"+upgrade_card_index+"' na unidade "+army_index+" slot "+upgrade_index );
+        console.log( allUpgrades[upgrade_card_index] );
+        army[army_index].equipped_upgrades[upgrade_index] = allUpgrades[upgrade_card_index];
+    }
+            
+    // retorna um título padrão para a unidade
+    getUnitTitle = function(unit) {
+        return (unit.unique?".":"" ) + unit.name + " (" + unit.cost+")";
+    }
+
+    // retorna um subtítulo padrão para a unidade
+    getUnitSubTitle = function(unit) {
+        return unit.unit_type + " - " + unit.rank; // todo format
+    }
+
+    // retorna o título padrão para upgrade
+    getUpgradeTitle = function( upgrade ) {
+        return upgrade.name + " (" + upgrade.cost + ")"
+    }
+
+    // retorna o subtítulo padrão para upgrade
+    getUpgradeSubTitle = function( upgrade ) {
+        return upgrade.keyword.join("<br/>");
+    }
+
+    // imprime exército
+    renderArmy = function() {
+        var html="";
+        totalPoints = 0;
+        $(army).each(function(k,v){
+            var card_title = getUnitTitle(v);
+            var card_subtitle = getUnitSubTitle(v);
+            html += "<span class='card' style='width: 18em' army-index='"+k+"'><div class='card-body'>"
+            // <img class="card-img-top" src="..." alt="Card image cap">
+            html += "<h5 class='card-title'>" + card_title + "</h5>";
+            html += "<h6 class='card-subtitle mb-2 text-muted'>"+ card_subtitle + "</h6>"
+            html += "<p class='card-text'>"+v.card_text+"</p>";
+            $(v.upgrade_type).each(function(k2,v2){
+                if ( v.equipped_upgrades[k2] ) {
+                    html += "<a class='btn btn-primary upgrade' army-index='"+k+"' upgrade-index='"+k2+"'>" + getUpgradeTitle(v.equipped_upgrades[k2]) + "</a>" // TODO format
+                    totalPoints += v.equipped_upgrades[k2].cost
+                } else {
+                    html += "<a class='btn btn-muted upgrade' army-index='"+k+"' upgrade-index='"+k2+"'>" + v2 + "</a>" // TODO format
+                }
+            });
+            html += "</div></span>";
+            totalPoints += v.cost;
+        });
+        $('#army').html(html);
+        $('#army-total-cost').html(totalPoints);
+        hookEventsForUpgradesLinks();
+    };
+
+    // esconde dados do exercito
+    hideArmy = function(){
+        $('#army').hide()
+    }
+
+    // mostra dados do exercito
+    showArmy = function(){
+        $('#army').show()
+    }
+
+    // mostra lista de upgrades para equipar na unidade
+    showUpgrades = function(upgrade_type,unit_type) {
+        var html="";
+        $(allUpgrades).each(function(k,v){
+            if ( v.upgrade_type == upgrade_type ) {
+                if ( ( v.faction == selectedFaction || v.faction == 'neutral' ) && ( v.unit_type == 'none' || v.unit_type == unit_type ) ) {
+                    console.log( k + " - " + v.name );
+                    html += "<span class='card upgrade-card' style='width: 18em' upgrade-card-index='"+k+"'>";
+                    html += "<h5 class='card-title'>" + getUpgradeTitle(v) + "</h5>";
+                    html += "<h6 class='card-subtitle mb-2 text-muted'>" + getUpgradeSubTitle(v) + "</h6>";
+                    html += "</span>";
+                }
+            }
+        });
+        html += "<span class='card upgrade-card' style='width: 18em' upgrade-card-index=''>";
+        html += "* Desequipar *";
+        html += "</span>";
+        $('#upgrades').html(html);
+        $('#upgrades').show();
+    }
+
+    hideUpgrades = function() {
+        $('#upgrades').hide();
+    }
+
+    // busca dados da unidade por nome
+    getUnitDataByName = function(name) {
+        var returnValue = null;
+        $(allUnits).each(function(k,v){
+            if ( v.name == name ) {
+                returnValue = v;
+            }
+        });
+        return returnValue;
+    }
+
+
+    // clona um objeto simples
+    cloneObject = function(obj) {
+        return jQuery.extend({}, obj);
+    }
+
+});

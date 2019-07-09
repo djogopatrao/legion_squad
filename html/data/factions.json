@@ -1,0 +1,14 @@
+[{"name":"light_side","description":"Light Side"},
+    {
+    "name":"dark_side",
+    "description":"Dark Side"
+    },
+    {
+    "name":"galactic_republic",
+    "description":"Galactic Republic"
+    },
+    {
+    "name":"separatist_alliance",
+    "description":"Separatist Alliance"
+    }
+]
