@@ -48,25 +48,45 @@ $(document).ready(function(){
         $('#select-faction').prop('disabled',true);
         selectedFaction = $('#select-faction').val();
 
-        // carrega combo de facções
-        $('#select-unit')
-            .find('option')
-            .remove()
-            .end()
-            .append('<option value="" default=1>Escolha a unidade...</option>')
-            .val('');
+        $('#units').hide();
+
+        var unitsByRank={};
         $(allUnits).each(function(k,v){
             if ( v.faction == selectedFaction || v.faction == 'Neutral' ) {
                 var display_name = getUnitTitle(v);
-                $('#select-unit').append($('<option />').val(v.name).text(display_name));
+                console.log(v.rank);
+                if ( !unitsByRank[ v.rank ] ) {
+                    unitsByRank[ v.rank ] = []
+                }
+                unitsByRank[ v.rank ].push( {'id':k,'name':display_name} ); 
+                //html += "<li class='list-group-item add-unit' unit-id='"+k+"'>" + v.rank + " - "+display_name + "</li>";
             }
         });
 
+        var html = "<ul class='list-group'>";
+        $(['commander','corps','heavy','operative','special_forces','support']).each(function(k,rank){
+            var img = "<img src='icons/"+rank+".png'/>";
+            $(unitsByRank[rank]).each(function(k2,v2){
+                html += "<li class='list-group-item add-unit-item' unit-id='"+v2.id+"'>"+img+" "+v2.name+"</li>"
+            });
+        });
+        html += "</ul>";
+        $('#units').html(html);
+
+        $('.add-unit-item').on('click',addUnitToArmy);
+
     })
 
-    // ao escolher uma unidade, adiciona ela à cambada
+    // ao escolher uma unidade, exibe combo de unidades e esconde exército
     $('#add-unit-button').on('click',function(e){
-        var unit = getUnitDataByName($('#select-unit').val());
+        $('#units').show();
+        $('#army').hide();
+    });
+
+    addUnitToArmy = function(e){
+        // codigo a rodar quando escolhe uma unidade
+        var unit_id = $(e.currentTarget).attr('unit-id');
+        var unit = allUnits[unit_id];
         if ( !unit ) { throw "Não achei essa unidade! Eita."; }
         var newUnit = cloneObject( unit );
         // TODO testar se é unidade unica, e se já existe
@@ -74,7 +94,9 @@ $(document).ready(function(){
         newUnit.equipped_upgrades = []
         army.push(newUnit);
         renderArmy();
-    });
+        $('#units').hide();
+        $('#army').show();
+    };
 
     // pendura um evento onclick para todos os links de upgrade
     hookEventsForUpgradesLinks = function() {    
