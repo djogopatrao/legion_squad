@@ -1,0 +1,8 @@
+{
+"commander": {"min":1, "max":2},
+"corps": {"min":3, "max":6},
+"heavy": {"min":0, "max":2},
+"operative": {"min":0, "max":2},
+"special_forces": {"min":0, "max":3},
+"support": {"min":0, "max":3}
+}

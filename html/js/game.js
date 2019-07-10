@@ -3,6 +3,11 @@ $(document).ready(function(){
     var selectedFaction;
     var army=[];
     var totalPoints = 0;
+
+    var maxPoints = 800;
+    var allowedQtds;
+
+
     // carrega dados de facção em json
     $.ajax({
         url:'data/factions.json',
@@ -21,6 +26,18 @@ $(document).ready(function(){
             });
 
 
+        }
+    });
+
+    // carrega faixas de minimo/maximo
+    $.ajax({
+        url:'data/ranges.json',
+        dataType:'json',
+        complete: function(x,r){
+            allowedQtds = x.responseJSON;
+            for( var rank in allowedQtds ) {
+                $('#'+rank+'-range').html("["+allowedQtds[rank].min+"-"+allowedQtds[rank].max+"]");
+            }
         }
     });
 
@@ -159,6 +176,8 @@ $(document).ready(function(){
     renderArmy = function() {
         var html="";
         totalPoints = 0;
+        totalUnitsByRank =  { "commander": 0, "corps": 0, "heavy": 0, "operative": 0, "special_forces": 0, "support": 0 }
+
         $(army).each(function(k,v){
             var card_title = getUnitTitle(v);
             var card_subtitle = getUnitSubTitle(v);
@@ -177,9 +196,20 @@ $(document).ready(function(){
             });
             html += "</div></span>";
             totalPoints += v.cost;
+            totalUnitsByRank[v.rank]++;
         });
         $('#army').html(html);
-        $('#army-total-cost').html(totalPoints);
+        $('#army-total-cost').html(totalPoints + "/" + maxPoints);
+        for (var r in totalUnitsByRank){
+            $('#'+r+'-qtd').html(totalUnitsByRank[r]);
+
+            if ( totalUnitsByRank[r] < allowedQtds[r].min || totalUnitsByRank[r] > allowedQtds[r].max ) {
+                $('#'+r+'-qtd').addClass('text-danger');
+            } else {
+                $('#'+r+'-qtd').addClass('text-dark');
+            }
+
+        };
         hookEventsForUpgradesLinks();
     };
 
