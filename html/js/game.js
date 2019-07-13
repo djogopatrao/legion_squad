@@ -134,6 +134,16 @@ $(document).ready(function(){
         });
     }
 
+    hookEventsForCopyUnit = function() {
+        $('.copy-unit').on('click', function(e){
+            var army_index = $(e.target).attr('army-index');
+            var new_unit = cloneObject( army[army_index] );
+            new_unit.equipped_upgrades = cloneObject( new_unit.equipped_upgrades );
+            army.push(new_unit);
+            renderArmy();
+        });
+    }
+
     // pendura um evento onclick para todos os links de upgrade
     hookEventsForUpgradeCards = function(army_index, upgrade_index) {    
         // ao escolher um upgrade, permite escolher uma carta desse tipo
@@ -192,6 +202,9 @@ $(document).ready(function(){
             var card_subtitle = getUnitSubTitle(v);
             html += "<span class='card' style='width: 18em' army-index='"+k+"'>";
             html += "<div class='card-header'>" + card_title;
+            if ( ! v.unique ) {
+                html += "<button type='button' class='btn btn-primary copy-unit' army-index='"+k+"'>C</button>"
+            }
             html += "<button type='button' class='btn btn-danger remove-unit' army-index='"+k+"'>X</button>"
             html += "</div>";
             html += "<div class='card-body'>"
@@ -224,6 +237,7 @@ $(document).ready(function(){
         };
         hookEventsForUpgradesLinks();
         hookEventsForRemoveUnit();
+        hookEventsForCopyUnit();
     };
 
     // esconde dados do exercito
