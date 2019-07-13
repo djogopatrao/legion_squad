@@ -125,6 +125,15 @@ $(document).ready(function(){
         });
     }
 
+    // pendura eventos para remover unidades
+    hookEventsForRemoveUnit = function() {
+        $('.remove-unit').on('click',function(e){
+            var army_index = $(e.target).attr('army-index');
+            army.splice(army_index,1);
+            renderArmy();
+        });
+    }
+
     // pendura um evento onclick para todos os links de upgrade
     hookEventsForUpgradeCards = function(army_index, upgrade_index) {    
         // ao escolher um upgrade, permite escolher uma carta desse tipo
@@ -181,9 +190,12 @@ $(document).ready(function(){
         $(army).each(function(k,v){
             var card_title = getUnitTitle(v);
             var card_subtitle = getUnitSubTitle(v);
-            html += "<span class='card' style='width: 18em' army-index='"+k+"'><div class='card-body'>"
+            html += "<span class='card' style='width: 18em' army-index='"+k+"'>";
+            html += "<div class='card-header'>" + card_title;
+            html += "<button type='button' class='btn btn-danger remove-unit' army-index='"+k+"'>X</button>"
+            html += "</div>";
+            html += "<div class='card-body'>"
             // <img class="card-img-top" src="..." alt="Card image cap">
-            html += "<h5 class='card-title'>" + card_title + "</h5>";
             html += "<h6 class='card-subtitle mb-2 text-muted'>"+ card_subtitle + "</h6>"
             html += "<p class='card-text'>"+v.card_text+"</p>";
             $(v.upgrade_type).each(function(k2,v2){
@@ -211,6 +223,7 @@ $(document).ready(function(){
 
         };
         hookEventsForUpgradesLinks();
+        hookEventsForRemoveUnit();
     };
 
     // esconde dados do exercito
