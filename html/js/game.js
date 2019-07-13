@@ -105,12 +105,17 @@ $(document).ready(function(){
         var unit_id = $(e.currentTarget).attr('unit-id');
         var unit = allUnits[unit_id];
         if ( !unit ) { throw "Não achei essa unidade! Eita."; }
-        var newUnit = cloneObject( unit );
-        // TODO testar se é unidade unica, e se já existe
-        // este array contem os upgrades equipados.
-        newUnit.equipped_upgrades = []
-        army.push(newUnit);
-        renderArmy();
+        if ( unit.unique && findUnitInArmyByName( unit.name ) ) {
+            alert("Unidade unica já foi adicionada!");
+            return;
+        } else {
+            var newUnit = cloneObject( unit );
+            // TODO testar se é unidade unica, e se já existe
+            // este array contem os upgrades equipados.
+            newUnit.equipped_upgrades = []
+            army.push(newUnit);
+            renderArmy();
+        }
         $('#units').hide();
         $('#army').show();
     };
@@ -286,6 +291,15 @@ $(document).ready(function(){
         return returnValue;
     }
 
+    findUnitInArmyByName = function(name) {
+        var returnValue = false;
+        $(army).each(function(k,v){
+            if ( v.name == name ) {
+                returnValue = true;
+            }
+        });
+        return returnValue;
+    }
 
     // clona um objeto simples
     cloneObject = function(obj) {
