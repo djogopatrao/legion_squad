@@ -84,14 +84,17 @@ $(document).ready(function(){
         $(['commander','corps','heavy','operative','special_forces','support']).each(function(k,rank){
             var img = "<img src='icons/"+rank+".png'/>";
             $(unitsByRank[rank]).each(function(k2,v2){
-                html += "<li class='list-group-item add-unit-item' unit-id='"+v2.id+"'>"+img+" "+v2.name+"</li>"
+                html += "<li class='list-group-item' unit-id='"+v2.id+"'>"+img+" "+v2.name
+                html += "<button type='button' class='btn btn-normal show-unequiped-unit' unit-id='"+v2.id+"'>V</button>"
+                html += "<button type='button' class='btn btn-primary add-unit-item' unit-id='"+v2.id+"'>+</button>"
+                html += "</li>"
             });
         });
         html += "</ul>";
         $('#units').html(html);
 
         $('.add-unit-item').on('click',addUnitToArmy);
-
+        hookEventsForViewingUnequipedUnit();
     })
 
     // ao escolher uma unidade, exibe combo de unidades e esconde exército
@@ -206,6 +209,27 @@ $(document).ready(function(){
         $('img.card-image').on('click',function(e){
             $('#cards').hide()
             showArmy();
+        })
+    }
+
+
+    hookEventsForViewingUnequipedUnit = function() {
+        $('.show-unequiped-unit').on('click',function(e){
+            var unit_id = $(e.target).attr('unit-id');
+            showUnequipedUnitCard( unit_id );
+        });
+    }
+
+    // exibe a carta referente à unidade #armyindex do exército montado
+    showUnequipedUnitCard = function( unit_id ) {
+        var img_url = "img" + "/" + allUnits[unit_id].faction + "/" + "unit" + "/" + allUnits[unit_id].name + ".png"
+        $('#units').hide();
+        $('#cards').show()
+        console.log(img_url);
+        $('#cards').html("<img src='"+img_url+"' class='card-image'>");
+        $('img.card-image').on('click',function(e){
+            $('#cards').hide()
+            $('#units').show();
         })
     }
 
