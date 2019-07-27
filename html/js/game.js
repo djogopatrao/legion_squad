@@ -100,13 +100,28 @@ $(document).ready(function(){
         $('#army').hide();
     });
 
+    // verifica se a unidade unit pode ser adicionada ao exército em edição
+    CanAddUnitToArmy = new (function() {
+        this.error = "";
+        this.validate = function(unit) {
+            if ( unit.unique && findUnitInArmyByName( unit.name ) ) {
+                this.error="Já existe um "+unit.name+" no exército, e esta é uma unidade única";
+                return false;
+            }
+        
+            return true;
+        }
+    })()
+
+    // adiciona uma unidade (indicada no elemento que disparou o
+    // evento e) ao exército, se possível.
     addUnitToArmy = function(e){
         // codigo a rodar quando escolhe uma unidade
         var unit_id = $(e.currentTarget).attr('unit-id');
         var unit = allUnits[unit_id];
         if ( !unit ) { throw "Não achei essa unidade! Eita."; }
-        if ( unit.unique && findUnitInArmyByName( unit.name ) ) {
-            alert("Unidade unica já foi adicionada!");
+        if ( !CanAddUnitToArmy.validate(unit) ) {
+            alert( CanAddUnitToArmy.error );
             return;
         } else {
             var newUnit = cloneObject( unit );
