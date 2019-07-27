@@ -103,9 +103,21 @@ $(document).ready(function(){
     // verifica se a unidade unit pode ser adicionada ao exército em edição
     CanAddUnitToArmy = new (function() {
         this.error = "";
+        this.betterClose = false; // indica se, depois do erro, é melhor fechar a janela de seleção de unidade
         this.validate = function(unit) {
+            this.error = "";
+            this.betterClose = false;
+            // verifica se unidade única está sendo adicionada mais de uma vez
             if ( unit.unique && findUnitInArmyByName( unit.name ) ) {
                 this.error="Já existe um "+unit.name+" no exército, e esta é uma unidade única";
+                return false;
+            }
+
+            // verifica se não vai superar a quantidade máxima de unidades
+            var totalUnitsByRank = getUnitQtdPerRank();
+            if ( totalUnitsByRank[unit.rank]+1 > allowedQtds[unit.rank].max ) {
+                this.error="Adicionar mais um "+unit.rank+" no exército ultrapassa a quantidade máxima ("+allowedQtds[unit.rank].max +")";
+                this.betterClose = true;
                 return false;
             }
         
@@ -122,11 +134,11 @@ $(document).ready(function(){
         if ( !unit ) { throw "Não achei essa unidade! Eita."; }
         if ( !CanAddUnitToArmy.validate(unit) ) {
             alert( CanAddUnitToArmy.error );
-            return;
+            if ( !CanAddUnitToArmy.betterClose ) {
+                return;
+            }
         } else {
             var newUnit = cloneObject( unit );
-            // TODO testar se é unidade unica, e se já existe
-            // este array contem os upgrades equipados.
             newUnit.equipped_upgrades = []
             army.push(newUnit);
             renderArmy();
@@ -211,11 +223,20 @@ $(document).ready(function(){
         return upgrade.keyword.join("<br/>");
     }
 
+    // contabiliza quantidade de unidades por rank
+    getUnitQtdPerRank = function() {
+        var totalUnitsByRank =  { "commander": 0, "corps": 0, "heavy": 0, "operative": 0, "special_forces": 0, "support": 0 }
+        $(army).each(function(k,v){
+            totalUnitsByRank[v.rank]++;
+        });
+        return totalUnitsByRank;
+    }
+
     // imprime exército
     renderArmy = function() {
         var html="";
-        totalPoints = 0;
-        totalUnitsByRank =  { "commander": 0, "corps": 0, "heavy": 0, "operative": 0, "special_forces": 0, "support": 0 }
+        var totalPoints = 0;
+        var totalUnitsByRank = getUnitQtdPerRank();
 
         $(army).each(function(k,v){
             var card_title = getUnitTitle(v);
@@ -241,7 +262,6 @@ $(document).ready(function(){
             });
             html += "</div></span>";
             totalPoints += v.cost;
-            totalUnitsByRank[v.rank]++;
         });
         $('#army').html(html);
         $('#army-total-cost').html(totalPoints + "/" + maxPoints);
