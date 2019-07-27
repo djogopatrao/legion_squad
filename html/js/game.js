@@ -140,6 +140,7 @@ $(document).ready(function(){
         } else {
             var newUnit = cloneObject( unit );
             newUnit.equipped_upgrades = []
+            newUnit.unit_id = unit_id
             army.push(newUnit);
             renderArmy();
         }
@@ -187,6 +188,27 @@ $(document).ready(function(){
             showArmy();
         });
     }
+
+    hookEventsForViewingUnit = function() {
+        $('.show-unit').on('click',function(e){
+            var unit_id = $(e.target).attr('unit-id');
+            showUnitCard( unit_id );
+        });
+    }
+
+    // exibe a carta referente à unidade #armyindex do exército montado
+    showUnitCard = function( unit_id ) {
+        var img_url = "img" + "/" + allUnits[unit_id].faction + "/" + "unit" + "/" + allUnits[unit_id].name + ".png"
+        hideArmy();
+        $('#cards').show()
+        console.log(img_url);
+        $('#cards').html("<img src='"+img_url+"' class='card-image'>");
+        $('img.card-image').on('click',function(e){
+            $('#cards').hide()
+            showArmy();
+        })
+    }
+
 
     // exibe a tela de seleção de upgrade 
     selectUpgrade = function( army_index, upgrade_index, upgrade_type,  unit_type ) {
@@ -246,6 +268,7 @@ $(document).ready(function(){
             if ( ! v.unique ) {
                 html += "<button type='button' class='btn btn-primary copy-unit' army-index='"+k+"'>C</button>"
             }
+            html += "<button type='button' class='btn btn-normal show-unit' unit-id='"+v.unit_id+"'>V</button>"
             html += "<button type='button' class='btn btn-danger remove-unit' army-index='"+k+"'>X</button>"
             html += "</div>";
             html += "<div class='card-body'>"
@@ -278,6 +301,7 @@ $(document).ready(function(){
         hookEventsForUpgradesLinks();
         hookEventsForRemoveUnit();
         hookEventsForCopyUnit();
+        hookEventsForViewingUnit();
     };
 
     // esconde dados do exercito
